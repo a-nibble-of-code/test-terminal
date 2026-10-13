@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian Archive Terminal | Beta</title>
+<style>
+:root{--green:#54ffc9;--dim:#20a889;--bg:#030706;--panel:#07110f;--line:#1b9e7e;--amber:#ffcf79;--red:#ff7777}
+*{box-sizing:border-box}
+body{margin:0;background:#020403;color:var(--green);font-family:"Courier New",monospace;min-height:100vh;text-shadow:0 0 5px #1d9b77;letter-spacing:.2px}
+body:before{content:"";pointer-events:none;position:fixed;inset:0;z-index:5;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0,rgba(0,0,0,.14) 1px,transparent 1px,transparent 4px);opacity:.38}
+body:after{content:"";pointer-events:none;position:fixed;inset:0;z-index:6;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+.shell{max-width:1500px;margin:12px auto;padding:12px;border:1px solid var(--line);box-shadow:0 0 18px #075c48,inset 0 0 20px #04251d;min-height:calc(100vh - 24px);position:relative;background:rgba(0,8,5,.92)}
+header{display:grid;grid-template-columns:1.3fr 1.4fr 1fr;gap:16px;align-items:center;border-bottom:2px solid var(--green);padding:7px 8px 14px;margin-bottom:14px}
+.brand{display:flex;gap:12px;align-items:center}.seal{border:2px solid var(--green);border-radius:50%;width:44px;height:44px;display:grid;place-items:center;font-size:24px;flex:none}
+.brand h1{font-size:17px;line-height:1.3;margin:0;font-weight:700}.brand small{font-size:12px;color:var(--dim)}
+.header-block{border-left:1px solid var(--line);padding-left:18px;line-height:1.5}.right{text-align:right}
+.layout{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(260px,.85fr);gap:14px}
+.terminal{border:1px solid transparent;padding:6px 12px;min-height:64vh;display:flex;flex-direction:column}
+.output{flex:1;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.55;font-size:15px}
+.line{margin:0 0 9px}.promptline{color:#fff}.muted{color:var(--dim)}.warn{color:var(--amber)}.error{color:var(--red)}
+.inputrow{display:flex;gap:9px;align-items:center;border-top:1px dashed var(--line);padding-top:13px;margin-top:10px}
+.prompt{font-weight:bold}.inputrow input{background:transparent;border:0;outline:none;color:var(--green);font:inherit;width:100%;caret-color:var(--green);text-shadow:inherit}
+.panel{border:1px solid var(--green);margin-bottom:10px;padding:10px 12px;background:rgba(2,18,13,.72);box-shadow:inset 0 0 10px rgba(23,148,111,.08)}
+.panel h2{font-size:15px;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);font-weight:normal}
+.panel p{margin:5px 0;line-height:1.4;font-size:13px}
+.status{float:right}.ok{color:var(--green)}.pending{color:var(--amber)}
+.links button{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--green);font:inherit;padding:5px 0;cursor:pointer}.links button:hover{color:#fff;background:#0b2b21}
+.imagebox{height:135px;background:linear-gradient(180deg,#0b2920,#06120e);border:1px solid #164b3a;display:grid;place-items:center;overflow:hidden;position:relative;color:#267f66}
+.imagebox svg{width:100%;height:100%;opacity:.8}.caption{font-size:11px!important;color:var(--dim);margin-top:6px!important}
+footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:12px;padding:12px 8px 2px;font-size:12px;color:var(--dim)}
+.blink{animation:blink 1s steps(2,start) infinite}@keyframes blink{to{visibility:hidden}}
+a{color:var(--green)}
+@media(max-width:850px){header{grid-template-columns:1fr}.header-block{border-left:0;border-top:1px solid var(--line);padding:8px 0 0}.right{text-align:left}.layout{grid-template-columns:1fr}.terminal{min-height:52vh}.output{font-size:14px}.shell{margin:0;min-height:100vh}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+ <div class="brand"><div class="seal">◈</div><div><h1>MERIDIAN BUREAU</h1><small>ARCHIVE TERMINAL v0.9.3 // BETA</small></div></div>
+ <div class="header-block">SECURE ARCHIVE ACCESS<br><span class="muted">AUTHORIZED PERSONNEL ONLY</span></div>
+ <div class="header-block right"><span id="clock">1986-11-14 03:27:16</span><br>USER: <span id="userLabel">GUEST</span></div>
+</header>
+<div class="layout">
+ <main class="terminal">
+  <div id="output" class="output" aria-live="polite"></div>
+  <form id="commandForm" class="inputrow">
+   <span class="prompt">&gt;</span><input id="commandInput" autocomplete="off" spellcheck="false" aria-label="Terminal command" autofocus>
+  </form>
+ </main>
+ <aside>
+  <section class="panel"><h2>SYSTEM STATUS</h2>
+   <p>Archive Index <span class="status ok">[ ONLINE ]</span></p>
+   <p>Personnel DB <span class="status ok">[ ONLINE ]</span></p>
+   <p>Media Library <span class="status ok">[ ONLINE ]</span></p>
+   <p>Original Index <span class="status pending">[ UNKNOWN ]</span></p>
+  </section>
+  <section class="panel links"><h2>QUICK LINKS</h2>
+   <button data-command="HELP">&gt; Command Reference</button>
+   <button data-command="SEARCH 0017">&gt; Public Record 0017</button>
+   <button data-command="PERSONNEL VENN">&gt; Personnel Records</button>
+   <button data-command="SEARCH PROTOCOL">&gt; Research Logs</button>
+   <button data-command="ACCESS SECOND_ARCHIVE">&gt; Second Archive</button>
+  </section>
+  <section class="panel"><h2>ACTIVE SESSION</h2>
+   <p>Commands Executed: <span id="cmdCount">0</span></p>
+   <p>Records Viewed: <span id="recCount">0</span></p>
+   <p>Last Access: <span id="lastAccess">NONE</span></p>
+   <div class="imagebox" aria-label="Stylized archival radio tower illustration">
+    <svg viewBox="0 0 360 150" role="img" aria-label="Radio tower silhouette"><rect width="360" height="150" fill="#071710"/><g stroke="#2c9877" stroke-width="1" opacity=".4"><path d="M0 22H360M0 44H360M0 66H360M0 88H360M0 110H360M0 132H360"/><path d="M30 0V150M70 0V150M110 0V150M150 0V150M190 0V150M230 0V150M270 0V150M310 0V150"/></g><path d="M0 126L30 118 56 126 84 120 111 128 144 121 170 129 201 123 230 128 263 119 290 126 330 117 360 124V150H0Z" fill="#06100c"/><g stroke="#48b996" stroke-width="2" fill="none"><path d="M60 125L78 35L96 125M68 85H88M72 65H84M65 103H91M78 35L67 49M78 35L89 49"/><path d="M78 36Q43 20 45 45M78 36Q112 20 111 45M78 26Q31 3 32 35M78 26Q125 3 124 35"/></g><rect x="218" y="88" width="90" height="39" fill="#0a2118" stroke="#22684e"/><path d="M213 88L260 61L313 88Z" fill="#0a2118" stroke="#22684e"/><circle cx="260" cy="79" r="3" fill="#7effc9"/><text x="180" y="143" fill="#4cb997" font-size="8" text-anchor="middle">SITE B / IMAGE COPY 03</text></svg>
+   </div><p class="caption">SITE B // IMAGE COPY 03 // SOURCE DATE UNVERIFIED</p>
+  </section>
+ </aside>
+</div>
+<footer><span>MERIDIAN BUREAU // ARCHIVE TERMINAL v0.9.3 (BETA)</span><span>TYPE <b>HELP</b> FOR COMMAND LIST</span></footer>
+</div>
+<script>
+const out=document.getElementById('output'), input=document.getElementById('commandInput');
+let commands=0, records=0, history=[], historyPos=0, loggedIn=false;
+const recordData={
+ "0017":{title:"Incident Report — Studio 2",date:"1989-10-14",type:"Incident Report",level:"1",summary:"Public bulletin reports no irregularities during a twelve-minute broadcast. Internal copy lists a different duration and staff count. Cross-reference: EV-05.",note:"Three versions remain in circulation. Do not designate an original without corroboration."},
+ "0041":{title:"Observation Log — Site B",date:"1983-07-16",type:"Field Report",level:"2",summary:"Technician notes repeatable visual patterns near Site B. Transfer copy contains a 3.4-second interval between perceived events. Further analysis required.",note:"Margin note: 'The gap is identical in copies made on different equipment.'"},
+ "0093":{title:"Transfer Ledger — Audio Group C",date:"1992-02-03",type:"Media Ledger",level:"2",summary:"Three audio items have incompatible recording dates. The listed transfer dates are consistent; the original recording dates are not.",note:"Related entries: 0017, 0041. Original index field is blank."},
+ "88C":{title:"Laboratory Note 88-C",date:"1988-05-22",type:"Research Note",level:"2",summary:"A recurring three-tone marker is present in several unrelated recordings. The note warns staff not to treat the tones as spoken language.",note:"Cross-reference: TRANSFER-LOG. Preserve clean and degraded copies."},
+ "1996":{title:"Replacement Protocol — Revision Notice",date:"1996-01-09",type:"Administrative Record",level:"3",summary:"A protocol revision is stamped two years after the Bureau's official closure. No approving officer is listed.",note:"Status: REPLACEMENT. Approval field: [NOT FOUND]."},
+ "CLOSE":{title:"Closure Review — Extract",date:"1994-09-30",type:"Review Summary",level:"3",summary:"The review finds that the Bureau cannot substantiate a single authoritative sequence for the documented Recurrence cases. Further reconstruction is suspended.",note:"The report recommends preserving disputed records. Later records indicate this recommendation was not consistently followed."},
+ "V-01":{title:"Venn, Elias — Personnel Extract",date:"[DISPUTED]",type:"Personnel Record",level:"2",summary:"Public record lists resignation in 1991. A letter dated 1993 references ongoing work. A 2001 broadcast copy contains a voice attributed to Venn by an unverified annotation.",note:"Identity status: UNCONFIRMED. Do not merge conflicting records."}
+};
+function add(text,cls=""){const div=document.createElement("div");div.className="line "+cls;div.textContent=text;out.appendChild(div);out.scrollTop=out.scrollHeight;}
+function block(text,cls=""){text.split("\n").forEach(line=>add(line,cls));}
+function divider(){add("------------------------------------------------------------","muted");}
+function help(){block("AVAILABLE COMMANDS\n\nHELP                    Display this message\nSEARCH [TERM]           Search the archive index\nRECORD [ID]             Open a specific record\nPERSONNEL [NAME|ID]     Search personnel records\nACCESS [AREA]           Request access to an archive section\nLOG                     Display command history\nCLEAR                   Clear terminal output\nSTATUS                  Display system status\nWHOAMI                  Display current session identity\nEXIT                    End this simulated session\n\nBETA NOTE: This is a fictional story terminal. Some records are incomplete by design.");}
+function search(q){
+ q=q.trim().toUpperCase();
+ if(!q){add("ERROR: SEARCH requires a record ID or keyword.","error");return}
+ const hits=Object.entries(recordData).filter(([id,r])=>id.includes(q)||r.title.toUpperCase().includes(q)||r.summary.toUpperCase().includes(q)||r.type.toUpperCase().includes(q));
+ if(hits.length){add(`${hits.length} record(s) found for: ${q}`);hits.forEach(([id,r])=>add(`  ${id}  |  ${r.title}  |  ${r.date}`));add("Use RECORD [ID] to open a record.");}
+ else if(["SECOND","ARCHIVE","SECOND_ARCHIVE"].includes(q)){add("INDEX RESPONSE: SECTION EXISTS; PUBLIC ROUTE NOT FOUND.","warn");add("Try: ACCESS SECOND_ARCHIVE");}
+ else {add("No matching records found.","warn");add("Search index may be incomplete. Try a record ID, VENN, PROTOCOL, or SITE B.");}
+}
+function record(id){
+ id=id.trim().toUpperCase();
+ const r=recordData[id];
+ if(!r){add(`RECORD ${id||"[EMPTY]"} NOT FOUND OR NOT ACCESSIBLE.`,"error");add("Try SEARCH [TERM] to query the public index.");return}
+ records++;document.getElementById("recCount").textContent=records;document.getElementById("lastAccess").textContent="RECORD "+id;
+ divider();block(`RECORD ID: ${id}\nTITLE: ${r.title}\nDATE: ${r.date}\nTYPE: ${r.type}\nACCESS LEVEL: ${r.level}\n\nSUMMARY:\n${r.summary}\n\nARCHIVE NOTE:\n${r.note}`);
+ if(id==="1996")add("SYSTEM FLAG: RECORD DATE POSTDATES OFFICIAL CLOSURE.","warn");
+ if(id==="0017")add("CROSS-REFERENCE SUGGESTION: SEARCH EV-05 OR PERSONNEL VENN.","warn");
+}
+function personnel(q){
+ q=q.trim().toUpperCase();
+ if(!q){add("PERSONNEL INDEX: EV-05 | MQ-02 | OR-11 | NB-04");add("Try PERSONNEL VENN, QUILL, RUSK, BELL, or EV-05.");return}
+ if(q.includes("VENN")||q==="EV-05"||q==="E.V."){record("V-01");add("PERSONNEL INDEX: EV-05 // Elias Venn // status unresolved.");}
+ else if(q.includes("QUILL")||q==="MQ-02"){add("MQ-02 // MARA QUILL // RECORDS ANALYST");add("Last public listing: 1994. Cross-reference: SECOND ARCHIVE.");}
+ else if(q.includes("RUSK")||q==="OR-11"){add("OR-11 // OWEN RUSK // BROADCAST SYSTEMS");add("Cross-reference: TRANSFER-LOG and Lab Note 88-C.");}
+ else if(q.includes("BELL")||q==="NB-04"){add("NB-04 // NADIA BELL // ARCHIVIST");add("Catalog note: 'Disagreement is not proof of corruption.'");}
+ else add("NO MATCH. Personnel index is partial; try VENN, QUILL, RUSK, or BELL.","warn");
+}
+function access(area){
+ area=area.trim().toUpperCase().replace(/\s+/g,"_");
+ if(!area){add("ACCESS requires a section name. Try ACCESS SECOND_ARCHIVE.");return}
+ if(["SECOND_ARCHIVE","SECOND","ARCHIVE_2"].includes(area)){
+   add("REQUESTING SECTION: SECOND ARCHIVE...");
+   add("ACCESS STATUS: PARTIAL READ-ONLY ACCESS GRANTED.","warn");
+   add("NOTICE: THIS INDEX PRESERVES CONFLICTING VERSIONS. IT DOES NOT CERTIFY AN ORIGINAL.");
+   add("Available records: 0017, 0041, 0093, 1996, CLOSE.");
+   add("Hint: compare the dates claimed by records with the dates supported by independent sources.");
+ } else if(["PERSONNEL","PUBLIC_RECORDS","RESEARCH_LOGS","MEDIA_LIBRARY"].includes(area)){
+   add(`SECTION ${area}: PUBLIC INDEX AVAILABLE. Use SEARCH or PERSONNEL.`);
+ } else {add(`ACCESS DENIED: SECTION ${area} NOT IN PUBLIC INDEX.`,"error");add("Access failures are logged locally in this browser session.");}
+}
+function run(raw){
+ const trimmed=raw.trim();if(!trimmed)return;
+ history.push(trimmed);historyPos=history.length;commands++;document.getElementById("cmdCount").textContent=commands;
+ add("> "+trimmed,"promptline");
+ const split=trimmed.split(/\s+/), cmd=split[0].toUpperCase(), arg=trimmed.slice(split[0].length).trim();
+ document.getElementById("lastAccess").textContent=cmd;
+ switch(cmd){
+ case "HELP": case "?":help();break;
+ case "SEARCH": search(arg);break;
+ case "RECORD": record(arg);break;
+ case "PERSONNEL": personnel(arg);break;
+ case "ACCESS": access(arg);break;
+ case "LOG": if(!history.length)add("No commands logged.");else history.forEach((x,i)=>add(`${String(i+1).padStart(2,"0")}  ${x}`));break;
+ case "STATUS": block("ARCHIVE INDEX ........ ONLINE\nPERSONNEL DATABASE .... ONLINE\nMEDIA LIBRARY ......... ONLINE\nORIGINAL INDEX ........ UNKNOWN\nPUBLICATION DATE ...... DISPUTED");break;
+ case "WHOAMI": add("SESSION USER: GUEST\nCLEARANCE: PUBLIC / LEVEL 1\nSESSION MODE: LOCAL SIMULATION");break;
+ case "CLEAR": out.innerHTML="";break;
+ case "EXIT": add("SESSION CLOSED. You may continue exploring; this is a local simulation.","warn");break;
+ case "HELLO": add("UNRECOGNIZED GREETING. PLEASE USE AN APPROVED COMMAND.");break;
+ case "CORRECTION": case "REPLACE": add("PROTOCOL RESPONSE: DO NOT DESTROY THE DISPUTED COPY.","warn");add("A margin note has been added to your session log: 'KEEP BOTH.'");break;
+ case "ORIGINAL": add("QUERY FAILED: ORIGINAL STATUS CANNOT BE VERIFIED.","warn");add("The requested distinction is not available in this index.");break;
+ default:add(`UNKNOWN COMMAND: ${cmd}`,"error");add("Type HELP for available commands.");
+ }
+}
+document.getElementById("commandForm").addEventListener("submit",e=>{e.preventDefault();run(input.value);input.value="";});
+input.addEventListener("keydown",e=>{if(e.key==="ArrowUp"){e.preventDefault();if(historyPos>0)input.value=history[--historyPos]||"";}if(e.key==="ArrowDown"){e.preventDefault();if(historyPos<history.length-1)input.value=history[++historyPos]||"";else{historyPos=history.length;input.value="";}}});
+document.querySelectorAll("[data-command]").forEach(b=>b.addEventListener("click",()=>{run(b.dataset.command);input.focus();}));
+function tick(){const d=new Date();document.getElementById("clock").textContent=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;}
+tick();setInterval(tick,1000);
+add("MERIDIAN PUBLIC INFORMATION BUREAU","");add("ARCHIVE TERMINAL v0.9.3 // BETA BUILD");add("------------------------------------------------------------","muted");
+add("NOTICE: This terminal is a fictional interactive story artifact.");add("PUBLIC INDEX MOUNTED. ORIGINAL INDEX STATUS: UNKNOWN.","warn");
+add("Type HELP to list commands. Try SEARCH 0017 to begin.");add("");input.focus();
+</script>
+</body>
+</html>
